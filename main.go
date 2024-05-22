@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/charmbracelet/huh"
 )
@@ -26,18 +27,29 @@ var model Model
 
 func main() {
 
+	serviceOptions := make([]huh.Option[string], len(Services))
+	for i, service := range Services {
+		// Split the service string on "-" to get the name and type
+		parts := strings.Split(service, "-")
+		name := strings.Title(parts[0]) + " " + strings.Title(parts[1])
+		serviceOptions[i] = huh.NewOption(name, service)
+	}
+
 	form := huh.NewForm(
+
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Select a service").
+				Options(
+					serviceOptions...,
+				).
+				Value(&model.service),
+		),
+
 		huh.NewGroup(
 			huh.NewInput().
 				Title("Enter the provider's pubkey").
 				Value(&model.provider),
-
-			huh.NewSelect[string]().
-				Title("Select a service").
-				Options(
-					huh.NewOption("Bitcoin Mainnet", "btc-mainnet-fullnode"),
-				).
-				Value(&model.service),
 
 			huh.NewSelect[int]().
 				Title("Select a contract type").
@@ -106,7 +118,9 @@ func main() {
 					model.qpm = value
 					return nil
 				}),
+		),
 
+		huh.NewGroup(
 			huh.NewSelect[int]().
 				Title("Select the authorization type").
 				Options(
